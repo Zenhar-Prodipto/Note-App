@@ -54,20 +54,39 @@ def getRoutes(req):
 
 @api_view(["GET"])
 def getNotes(req):
-    notes = Note.objects.all()
+    notes = Note.objects.all().order_by("-updated")
     serializer = NoteSerializer(notes, many=True)
     return Response(serializer.data)
+
+
+# @api_view(["POST"])
+# def createNote(req):
+#     data = req.data
+#     # title = data['title']
+#     body = data["body"]
+#     newNote = Note.objects.create(body)
+#     serializer = NoteSerializer(data=newNote, many=False)
+#     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+{"title": "test Title", "body": "Test Body"}
 
 
 @api_view(["POST"])
 def createNote(req):
     data = req.data
-    serializer = NoteSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    body = data["body"]
+
+    if "title" in data:
+        title = data["title"]
     else:
-        return Response(serializer.error_messages, status=status.HTTP_400_BAD_REQUEST)
+        title = None
+
+    serializer = NoteSerializer(data=data, many=False)
+    if serializer.is_valid():
+        if title != None:
+            Note.objects.create(title=title, body=body)
+        Note.objects.create(body=body)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(["GET"])
